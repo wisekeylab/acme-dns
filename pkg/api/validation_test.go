@@ -84,6 +84,7 @@ func TestValidTXT(t *testing.T) {
 		{strings.Repeat("a", 255), true},
 		{strings.Repeat("a", 256), false},
 		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaa#aaaaaaaaaaaaaa", false},
+		{"cidtls=" + strings.Repeat("0123456789abcdef", 2), true},  // label=hex, 39 characters
 		{"wisekey=" + strings.Repeat("0123456789abcdef", 2), true}, // label=hex, 40 characters
 		{strings.Repeat("a", 39) + "=", true},
 		{"=", true},

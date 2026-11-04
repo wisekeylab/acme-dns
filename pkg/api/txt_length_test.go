@@ -18,13 +18,13 @@ import (
 // TestALabelEqualsHexValueIsAcceptedAndServed drives the whole path a client
 // uses: the value is posted to /update with the registration's credentials,
 // and is then read back over DNS as a TXT record at the registration's full
-// domain. The value has the form label=hex, 40 characters, which upstream
-// refuses twice: for its length and for the '='.
+// domain. The value has the form label=hex, here 39 characters, which
+// upstream refuses twice: for its length and for the '='.
 func TestALabelEqualsHexValueIsAcceptedAndServed(t *testing.T) {
 	// Built at runtime: a label, '=', and 32 hexadecimal digits.
-	value := "wisekey=" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	if len(value) != 40 {
-		t.Fatalf("test value has %d characters, want 40", len(value))
+	value := "cidtls=" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	if len(value) != 39 {
+		t.Fatalf("test value has %d characters, want 39", len(value))
 	}
 
 	router, _, db := setupRouter(false, false)
