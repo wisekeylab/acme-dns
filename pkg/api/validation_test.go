@@ -1,6 +1,7 @@
 package api
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/joohoi/acme-dns/pkg/acmedns"
@@ -75,10 +76,19 @@ func TestValidTXT(t *testing.T) {
 		txt    string
 		output bool
 	}{
-		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true},
-		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", false},
+		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true},  // 43, the ACME DNS-01 length
+		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true}, // 44
+		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true},   // 42
+		{strings.Repeat("a", 40), true},
+		{"a", true},
+		{strings.Repeat("a", 255), true},
+		{strings.Repeat("a", 256), false},
 		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaa#aaaaaaaaaaaaaa", false},
-		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", false},
+		{strings.Repeat("a", 39) + "=", false}, // padding is outside the alphabet
+		{strings.Repeat("a", 39) + "+", false},
+		{strings.Repeat("a", 39) + "/", false},
+		{strings.Repeat("a", 39) + " ", false},
+		{strings.Repeat("a", 39) + "é", false},
 		{"", false},
 	} {
 		ret := validTXT(test.txt)
