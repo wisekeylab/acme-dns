@@ -1,0 +1,26 @@
+# Container image for this fork, published to ghcr.io/wisekeylab/acme-dns by
+# .github/workflows/image.yml.
+#
+# Unlike the inherited Dockerfile, which clones upstream acme-dns, this builds
+# the source in this checkout, so the image contains this fork's changes.
+# The runtime layout matches Dockerfile.release.
+
+FROM --platform=$BUILDPLATFORM golang:1-alpine AS build
+ARG TARGETOS
+ARG TARGETARCH
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -trimpath -ldflags="-s -w" -o /out/acme-dns .
+
+FROM alpine:3
+RUN apk --no-cache add ca-certificates && update-ca-certificates \
+    && mkdir -p /etc/acme-dns /var/lib/acme-dns
+COPY --from=build /out/acme-dns /usr/local/bin/acme-dns
+
+VOLUME ["/etc/acme-dns", "/var/lib/acme-dns"]
+ENTRYPOINT ["acme-dns"]
+EXPOSE 53 80 443
+EXPOSE 53/udp

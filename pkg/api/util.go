@@ -49,11 +49,18 @@ func validSubdomain(s string) bool {
 	return RegExp.MatchString(s)
 }
 
+// validTXTValue is what validTXT accepts: 1 to 255 characters from the
+// URL-safe base64 alphabet plus '='.
+var validTXTValue = regexp.MustCompile(`^[A-Za-z0-9_=-]{1,255}$`)
+
+// validTXT accepts a value of 1 to 255 characters from the URL-safe base64
+// alphabet plus '='.
+//
+// Upstream accepts exactly 43 characters from the URL-safe base64 alphabet,
+// the shape of an ACME DNS-01 key authorization digest. That length is not
+// defined by ACME, and some certificate authorities issue domain-validation
+// values of other lengths, in the form label=hex. 255 is the most a single TXT
+// character-string can hold (RFC 1035 §3.3).
 func validTXT(s string) bool {
-	sn := acmedns.SanitizeString(s)
-	if utf8.RuneCountInString(s) == 43 && utf8.RuneCountInString(sn) == 43 {
-		// 43 chars is the current LE auth key size, but not limited / defined by ACME
-		return true
-	}
-	return false
+	return validTXTValue.MatchString(s)
 }

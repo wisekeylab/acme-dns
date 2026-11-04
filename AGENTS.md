@@ -17,7 +17,15 @@ A fork of [acme-dns](https://github.com/acme-dns/acme-dns), maintained by WISeKe
 
 ## Releases
 
-**Do not push release tags yet.** The inherited `release.yml` workflow publishes to upstream's Docker Hub namespace and signs with keys this fork does not hold, so a tag would fail. Where this fork's container image is published, and whether it is signed, is still to be decided; this section will say so once it is.
+This fork's container image is published to **`ghcr.io/wisekeylab/acme-dns`** by `.github/workflows/image.yml`, built from `Dockerfile.image` for `linux/amd64` and `linux/arm64`:
+
+- every merge to `master` publishes `:master` and `:sha-<commit>`;
+- a tag `wisekey-vX.Y.Z` publishes `:wisekey-vX.Y.Z`;
+- pull requests build the image without publishing it.
+
+**Never push a tag starting with `v`.** It triggers the inherited `release.yml`, which publishes to upstream's Docker Hub namespace and signs with keys this fork does not hold. The image is **not signed** for now.
+
+**Use `Dockerfile.image`, not the inherited `Dockerfile`**, to build this fork: the inherited one clones upstream acme-dns, so its image does not contain this fork's changes.
 
 ## Building and testing
 
@@ -25,5 +33,5 @@ A fork of [acme-dns](https://github.com/acme-dns/acme-dns), maintained by WISeKe
 go build ./...
 go test ./...
 golangci-lint run
-docker build -t acme-dns:local .
+docker build -f Dockerfile.image -t acme-dns:local .
 ```

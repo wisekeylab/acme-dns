@@ -368,7 +368,7 @@ func TestApiManyUpdateWithCredentials(t *testing.T) {
 		{"a097455b-52cc-4569-90c8-7a4b97c6eba8", "tooshortpass", "bb97455b-52cc-4569-90c8-7a4b97c6eba8", validTxtData, 401},
 		{"a097455b-52cc-4569-90c8-7a4b97c6eba8", "LongEnoughPassButNoUserExists___________", "bb97455b-52cc-4569-90c8-7a4b97c6eba8", validTxtData, 401},
 		{newUser.Username.String(), newUser.Password, "a097455b-52cc-4569-90c8-7a4b97c6eba8", validTxtData, 401},
-		{newUser.Username.String(), newUser.Password, newUser.Subdomain, "tooshortfortxt", 400},
+		{newUser.Username.String(), newUser.Password, newUser.Subdomain, "not#in#the#alphabet", 400}, // the length check is relaxed; the alphabet check is not
 		{newUser.Username.String(), newUser.Password, newUser.Subdomain, 1234567890, 400},
 		{newUser.Username.String(), newUser.Password, newUser.Subdomain, validTxtData, 200},
 		{newUserWithCIDR.Username.String(), newUserWithCIDR.Password, newUserWithCIDR.Subdomain, validTxtData, 401},

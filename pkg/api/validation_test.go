@@ -1,6 +1,7 @@
 package api
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/joohoi/acme-dns/pkg/acmedns"
@@ -75,10 +76,29 @@ func TestValidTXT(t *testing.T) {
 		txt    string
 		output bool
 	}{
-		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true},
-		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", false},
+		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true},  // 43, the ACME DNS-01 length
+		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true}, // 44
+		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true},   // 42
+		{strings.Repeat("a", 40), true},
+		{"a", true},
+		{strings.Repeat("a", 255), true},
+		{strings.Repeat("a", 256), false},
 		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaa#aaaaaaaaaaaaaa", false},
-		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", false},
+		{"cidtls=" + strings.Repeat("0123456789abcdef", 2), true},        // label=hex, 39 characters
+		{"wisekey=" + strings.Repeat("0123456789abcdef", 2), true},       // label=hex, 40 characters
+		{"CIDTLS=" + strings.Repeat("0123456789ABCDEF", 2), true},        // upper-case label and hex
+		{"cid2tls=" + strings.Repeat("0123456789abcdef", 2), true},       // a digit in the label
+		{strings.Repeat("a", 247) + "=" + strings.Repeat("f", 7), true},  // 255 in total
+		{strings.Repeat("a", 248) + "=" + strings.Repeat("f", 7), false}, // 256 in total
+		{strings.Repeat("a", 39) + "=", true},
+		{"=", true},
+		{strings.Repeat("a", 39) + ".", false},
+		{strings.Repeat("a", 39) + "\"", false},
+		{strings.Repeat("a", 39) + "\n", false},
+		{strings.Repeat("a", 39) + "+", false},
+		{strings.Repeat("a", 39) + "/", false},
+		{strings.Repeat("a", 39) + " ", false},
+		{strings.Repeat("a", 39) + "é", false},
 		{"", false},
 	} {
 		ret := validTXT(test.txt)
