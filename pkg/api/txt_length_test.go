@@ -8,19 +8,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/miekg/dns"
 
 	"github.com/joohoi/acme-dns/pkg/acmedns"
 	"github.com/joohoi/acme-dns/pkg/nameserver"
 )
 
-// TestA40CharacterValueIsAcceptedAndServed drives the whole path a client
+// TestALabelEqualsHexValueIsAcceptedAndServed drives the whole path a client
 // uses: the value is posted to /update with the registration's credentials,
 // and is then read back over DNS as a TXT record at the registration's full
-// domain. A value of 40 characters is refused by upstream's exact-43 check.
-func TestA40CharacterValueIsAcceptedAndServed(t *testing.T) {
-	// Built at runtime: a mix of the characters the alphabet allows.
-	value := strings.Repeat("0123456789abcdefABCD-_", 2)[:40]
+// domain. The value has the form label=hex, 40 characters, which upstream
+// refuses twice: for its length and for the '='.
+func TestALabelEqualsHexValueIsAcceptedAndServed(t *testing.T) {
+	// Built at runtime: a label, '=', and 32 hexadecimal digits.
+	value := "wisekey=" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	if len(value) != 40 {
+		t.Fatalf("test value has %d characters, want 40", len(value))
+	}
 
 	router, _, db := setupRouter(false, false)
 	server := httptest.NewServer(router)
@@ -79,14 +84,14 @@ func TestA40CharacterValueIsAcceptedAndServed(t *testing.T) {
 			return
 		}
 	}
-	t.Fatalf("the 40-character value is not served at %s; answer: %v", q.Question[0].Name, in.Answer)
+	t.Fatalf("the value %q is not served at %s; answer: %v", value, q.Question[0].Name, in.Answer)
 }
 
-// TestAValueOutsideTheAlphabetIsStillRefused shows the relaxed check kept the
-// character test: a 40-character value with standard-base64 padding is
-// refused at /update.
+// TestAValueOutsideTheAlphabetIsStillRefused shows the relaxed check kept a
+// character test: a 40-character value containing '+', which is outside the
+// URL-safe base64 alphabet plus '=', is refused at /update.
 func TestAValueOutsideTheAlphabetIsStillRefused(t *testing.T) {
-	value := strings.Repeat("a", 39) + "="
+	value := strings.Repeat("a", 39) + "+"
 
 	router, _, db := setupRouter(false, false)
 	server := httptest.NewServer(router)

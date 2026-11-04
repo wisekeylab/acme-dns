@@ -84,7 +84,12 @@ func TestValidTXT(t *testing.T) {
 		{strings.Repeat("a", 255), true},
 		{strings.Repeat("a", 256), false},
 		{"aaaaaaaaaaaaaaaaaaaaaaaaaaaa#aaaaaaaaaaaaaa", false},
-		{strings.Repeat("a", 39) + "=", false}, // padding is outside the alphabet
+		{"wisekey=" + strings.Repeat("0123456789abcdef", 2), true}, // label=hex, 40 characters
+		{strings.Repeat("a", 39) + "=", true},
+		{"=", true},
+		{strings.Repeat("a", 39) + ".", false},
+		{strings.Repeat("a", 39) + "\"", false},
+		{strings.Repeat("a", 39) + "\n", false},
 		{strings.Repeat("a", 39) + "+", false},
 		{strings.Repeat("a", 39) + "/", false},
 		{strings.Repeat("a", 39) + " ", false},
